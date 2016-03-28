@@ -7,6 +7,7 @@
 #
 import numpy
 import scipy
+from scipy.interpolate import interp1d
 import math
 import pylab as plt
 import random
@@ -28,6 +29,10 @@ def get_lower_peaks(X):
 	return get_peaks(X=X, uppers=False)
 
 def get_h(XY):
+	# this doesn't quite cut it. if we have "blunt" extrema, they won't look like extrema. for example,
+	# if we have two equal valued points at a peak, instead of 1, they will both fail the extrema (peak) test.
+	# we have to fit to a spline, then apply this logic. even then, however, we may not be able to find extrame
+	# in this simple manner, since we can still (in principle) get flat-top functions.
 	x_uppers = get_upper_peaks(XY)
 	x_lowers = get_lower_peaks(XY)
 	#
@@ -66,6 +71,8 @@ def peaks_test_1(n_modes=5, r_factor_range=10., fignum=0):
 	pks_lower = get_lower_peaks(h0)
 	#
 	modes = get_h_modes(h0)
+	while len(modes[-1])==0: modes.pop(-1)
+	#f_ints = [interp1d(*zip(*md), kind='cubic') for md in modes]
 	#return modes
 	#
 	plt.figure(fignum)
@@ -76,6 +83,10 @@ def peaks_test_1(n_modes=5, r_factor_range=10., fignum=0):
 	#plt.plot(*zip(*h1), color='r', ls='--', lw=2., marker='')
 	for j,md in enumerate(modes[1:]):
 		plt.plot(*zip(*md), ls='--', lw=2., marker='')
+		#plt.plot(X, f_ints[j](X), '--')
+	
+	f = interp1d(*zip(*modes[1]), kind='cubic')
+	#plt.plot(X,f(X[1:-1]), 'r--')
 	
 	return modes
 
